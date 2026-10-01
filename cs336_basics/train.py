@@ -56,7 +56,7 @@ def get_args(argv=None) -> argparse.Namespace:
     p.add_argument("--lr-max", type=float, default=1e-3)
     p.add_argument("--lr-min", type=float, default=1e-5)
     p.add_argument("--warmup-iters", type=int, default=200)
-    p.add_argument("--cosine-iters", type=int, default=5_000)
+    p.add_argument("--cosine-iters", type=int, default=None)
     p.add_argument("--weight-decay", type=float, default=0.01)
     p.add_argument("--beta1", type=float, default=0.9)
     p.add_argument("--beta2", type=float, default=0.95)
@@ -93,6 +93,7 @@ def pick_device(requested: str | None) -> torch.device:
     return torch.device("cpu")
 
 
+@torch.no_grad()
 def estimate_loss(model: nn.Module, data, args, device: torch.device):
     """Average loss over several batches. Cheap proxy for full-set evaluation."""
     model.eval()  # set model in eval mode
@@ -160,7 +161,7 @@ def main(argv=None):
         print(f"resumed from {args.resume} at iteration {start_iter}")
 
     # -----log experiment results--------
-    log_path = ckpt_dir / "log.josnl"
+    log_path = ckpt_dir / "log.jsonl"
     log_f = open(log_path, "a")  # noqa: SIM115
 
     def log(**kw):
@@ -189,7 +190,7 @@ def main(argv=None):
         # if A100
         with torch.autocast("cuda", dtype=torch.bfloat16):
             logits = model(x)
-            loss = cross_entropy(logits, y)
+        loss = cross_entropy(logits, y)
 
         # if loss goes to infinite, stop
         if not math.isfinite(loss.item()):
@@ -225,11 +226,11 @@ def main(argv=None):
         if it > 0 and it % args.ckpt_every == 0:
             save_checkpoint(model, optimizer, it, ckpt_dir / "latest.pt")
 
-        # ----------------- final ---------------
-        val_loss = estimate_loss(model, val_data, args, device)
-        print(f"final VAL loss {val_loss:.4f}  ppl {val_loss:.1f}")
-        save_checkpoint(model, optimizer, args.max_iters, ckpt_dir / "final.pt")
-        log(event="val", iter=it, val_loss=val_loss, wallclock=time.perf_counter() - t0)
+    # ----------------- final ---------------
+    val_loss = estimate_loss(model, val_data, args, device)
+    print(f"final VAL loss {val_loss:.4f}  ppl {val_loss:.1f}")
+    save_checkpoint(model, optimizer, args.max_iters, ckpt_dir / "final.pt")
+    log(event="val", iter=it, val_loss=val_loss, wallclock=time.perf_counter() - t0)
 
 
 if __name__ == "__main__":
