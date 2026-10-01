@@ -107,6 +107,9 @@ def estimate_loss(model: nn.Module, data, args, device: torch.device):
 
 def main(argv=None):
 
+    # this is when we have GPU
+    torch.set_float32_matmul_precision("high")
+
     args = get_args(argv)
     torch.manual_seed(args.seed)
     np.random.seed(args.seed)
@@ -180,8 +183,11 @@ def main(argv=None):
             group["lr"] = lr
 
         x, y = get_batch(train_data, args.batch_size, args.context_length, device)
-        logits = model(x)
-        loss = cross_entropy(logits, y)
+
+        # if A100
+        with torch.autocast("cuda", dtype=torch.bfloat16):
+            logits = model(x)
+            loss = cross_entropy(logits, y)
 
         # if loss goes to infinite, stop
         if not math.isfinite(loss.item()):
@@ -195,6 +201,7 @@ def main(argv=None):
         optimizer.step()
 
         if it % args.log_every == 0:
+            torch.cuda.synchronize()
             dt = time.perf_counter() - t0
             steps = max(1, it - start_iter + 1)
             tok_sec = tokens_per_iter * steps / dt
