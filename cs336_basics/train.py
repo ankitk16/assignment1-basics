@@ -152,7 +152,7 @@ def main(argv=None):
         weight_decay=args.weight_decay,
     )
 
-    if args.compile and device.type == "cude":
+    if args.compile and device.type == "cuda":
         model = torch.compile(model)
 
     start_iter = 0
