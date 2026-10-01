@@ -111,6 +111,9 @@ def main(argv=None):
     torch.set_float32_matmul_precision("high")
 
     args = get_args(argv)
+    if args.cosine_iters is None:
+        args.cosine_iters = args.max_iters
+
     torch.manual_seed(args.seed)
     np.random.seed(args.seed)
 
