@@ -170,8 +170,7 @@ def main(argv=None):
         log_f.write(json.dumps(kw) + "\n")
         log_f.flush()
 
-    log(event="config", **vars(args), n_params=n_params, device=str(device))
-
+    log(event="config", **(vars(args) | {"n_params": n_params, "device": str(device)}))
     # ---------------training loop------------------------------
     model.train()
     t0 = time.perf_counter()
