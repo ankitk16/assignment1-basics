@@ -227,7 +227,7 @@ def main(argv=None):
 
         # ----------------- final ---------------
         val_loss = estimate_loss(model, val_data, args, device)
-        print(f"final VAL loss {val_loss:.4f}  ppl {math.exp(val_loss):.1f}")
+        print(f"final VAL loss {val_loss:.4f}  ppl {val_loss:.1f}")
         save_checkpoint(model, optimizer, args.max_iters, ckpt_dir / "final.pt")
         log(event="val", iter=it, val_loss=val_loss, wallclock=time.perf_counter() - t0)
 
