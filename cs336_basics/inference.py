@@ -40,7 +40,7 @@ def gen_text(
 
     for _ in range(n_tok):
         ctx = x[-context_length:]
-        logits = model(ctx.unsqueeze(0))  # unsqueeze to give a batch dim
+        logits = model(ctx.unsqueeze(0))[0, -1, :]  # unsqueeze to give a batch dim
 
         if temp:
             logits = logits / temp
@@ -59,3 +59,10 @@ def gen_text(
             break
 
     return tok_gen
+
+
+# Take stock of situation
+# 1. I am cold
+# 2. Thinking needs a better space
+# 3. I am hungry so I need some food--I could eat at home and then go to Nero?
+# 4.
