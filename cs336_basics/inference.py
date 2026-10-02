@@ -41,6 +41,7 @@ def gen_text(
     for _ in range(n_tok):
         ctx = x[-context_length:]
         logits = model(ctx.unsqueeze(0))[0, -1, :]  # unsqueeze to give a batch dim
+        assert logits.dim() == 1, logits.shape
 
         if temp:
             logits = logits / temp
